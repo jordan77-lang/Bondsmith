@@ -1,5 +1,7 @@
 # Mol Forge
 
+**Live: https://jordan77-lang.github.io/Molforge/**
+
 Forge chemistry figures for curriculum work: search PubChem or draw a structure
 with [Ketcher](https://github.com/epam/ketcher), tune how it's drawn, preview the
 result, and export **Illustrator-ready SVG**, PNG, or a 3D render.
@@ -94,6 +96,18 @@ npm run preview
 
 `dist/` can be hosted on any static host (GitHub Pages, Netlify, an ASU static
 site, etc.).
+
+## Deployment
+
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which type-checks,
+lints, builds, and publishes to GitHub Pages. You can also run it by hand from
+the Actions tab.
+
+Because Pages serves from `https://<user>.github.io/<repo>/`, the workflow builds
+with `BASE_PATH="/<repo>/"` so asset URLs carry that prefix; local dev falls back
+to `/`. The repo name is read from `GITHUB_REPOSITORY`, so renaming or forking
+doesn't break the build. If you move the app to a domain root, no change is
+needed — `BASE_PATH` simply isn't set.
 
 ## Stack
 
