@@ -1,0 +1,72 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Allows a manual run from the Actions tab.
+  workflow_dispatch:
+
+# GITHUB_TOKEN permissions needed to publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it mid-publish, but only
+# keep one queued behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Ketcher's standalone WASM build requires Node 22+.
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check and lint
+        run: |
+          npx tsc -b
+          npx oxlint
+
+      - name: Build
+        # Pages serves the site from /<repo>/, so asset URLs need that prefix.
+        # Derived from the repo name rather than hard-coded, so a rename or a
+        # fork keeps working.
+        run: BASE_PATH="/${GITHUB_REPOSITORY#*/}/" npm run build
+
+      - name: Add SPA + Jekyll guards
+        run: |
+          # Pages runs Jekyll by default, which strips files and directories
+          # beginning with an underscore. Vite doesn't emit any today, but this
+          # costs nothing and prevents a confusing future breakage.
+          touch dist/.nojekyll
+          # Single-page fallback: any deep link returns index.html instead of a
+          # 404. The app has no router today, but this also covers a refresh on
+          # a path that Pages doesn't know.
+          cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

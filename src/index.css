@@ -1,0 +1,136 @@
+:root {
+  /* ASU brand constants — identical in both themes. */
+  --maroon: #8c1d40;
+  --gold: #ffc627;
+
+  --radius: 10px;
+  --font-display: 'Fraunces', 'Palatino Linotype', Palatino, serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+
+  color-scheme: light;
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Light theme (default). */
+:root,
+:root[data-theme='light'] {
+  --maroon-deep: #5c0e28;
+  --gold-soft: #ffe08a;
+  --ink: #1a1214;
+  --muted: #5c4f53;
+  --paper: #f7f2eb;
+  --paper-2: #efe6db;
+  --surface: #ffffff;
+  --surface-2: #fbf8f4;
+  --line: rgba(140, 29, 64, 0.18);
+  --shadow: 0 10px 30px rgba(92, 14, 40, 0.08);
+  --accent-ink: var(--maroon-deep);
+  --error-bg: #fdecec;
+  --error-line: #d64545;
+  --error-ink: #8a1f1f;
+  --warn-bg: #fff8e6;
+  --warn-line: #d9a72c;
+  --warn-ink: #6b4c05;
+  --bg-image:
+    radial-gradient(1200px 500px at 10% -10%, rgba(255, 198, 39, 0.28), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(140, 29, 64, 0.12), transparent 50%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+}
+
+/* Dark theme. The Ketcher canvas stays light — it's a document surface, and
+   inverting a chemistry drawing changes what the figure looks like. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --maroon-deep: #ffa9c4;
+  --gold-soft: #6b5310;
+  --ink: #f2ecee;
+  --muted: #b3a5aa;
+  --paper: #171215;
+  --paper-2: #120e11;
+  --surface: #221b1f;
+  --surface-2: #1b1519;
+  --line: rgba(255, 198, 39, 0.16);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --accent-ink: #2a1016;
+  --error-bg: #3a1d1d;
+  --error-line: #e06666;
+  --error-ink: #ffc9c9;
+  --warn-bg: #33280d;
+  --warn-line: #d9a72c;
+  --warn-ink: #ffe3a3;
+  --bg-image:
+    radial-gradient(1200px 500px at 10% -10%, rgba(255, 198, 39, 0.10), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(140, 29, 64, 0.22), transparent 50%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  color: var(--ink);
+  background: var(--bg-image);
+  /* Panels and the editor set their own min-widths; the page itself must never
+     scroll sideways. */
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--maroon-deep);
+}
+
+a:hover {
+  color: var(--maroon);
+}
+
+/* Visible only to assistive tech.
+   `position: absolute` alone is not enough for <legend>: a legend is laid out by
+   its fieldset and ignores width, stretching to the full container width at
+   whatever offset it sits — which silently makes the page scroll sideways.
+   clip-path plus max-width contains it in every element type. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  max-width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--maroon);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

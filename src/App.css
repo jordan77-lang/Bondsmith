@@ -1,0 +1,1019 @@
+.app {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 100dvh;
+}
+
+/* ---------- Header ---------- */
+
+.app-header {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.brand-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: clamp(1.55rem, 2.4vw, 2rem);
+  letter-spacing: -0.02em;
+  color: var(--maroon-deep);
+  line-height: 1.1;
+}
+
+.toolbar-controls {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1.4fr) minmax(12rem, 1fr) auto;
+  gap: 0.85rem 1rem;
+  align-items: end;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.input-row {
+  display: flex;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.input-row input {
+  flex: 1;
+  min-width: 0;
+  height: 2.45rem;
+  padding: 0 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+}
+
+.input-row input:focus {
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--maroon) 15%, transparent);
+}
+
+.input-row input:disabled {
+  opacity: 0.65;
+}
+
+/* ---------- Autocomplete ---------- */
+
+.suggest-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 3.4rem;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-height: 14rem;
+  overflow: auto;
+}
+
+.suggest-list button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.suggest-list button:hover,
+.suggest-list .suggest-active {
+  background: color-mix(in srgb, var(--gold) 35%, var(--surface));
+  color: var(--accent-ink);
+  outline: none;
+}
+
+/* ---------- Buttons ---------- */
+
+.export-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  padding-bottom: 0.05rem;
+}
+
+.btn {
+  height: 2.45rem;
+  padding: 0 0.95rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease,
+    opacity 120ms ease;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  height: 1.9rem;
+  padding: 0 0.6rem;
+  font-size: 0.82rem;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--maroon);
+  color: #fff;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--maroon) 82%, black);
+}
+
+.btn-accent {
+  background: var(--gold);
+  color: #2a1016;
+  border-color: color-mix(in srgb, var(--gold) 70%, var(--maroon));
+}
+
+.btn-accent:not(:disabled):hover {
+  background: color-mix(in srgb, var(--gold) 80%, white);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--maroon-deep);
+  border-color: var(--line);
+}
+
+.btn-secondary:not(:disabled):hover {
+  border-color: var(--maroon);
+  background: color-mix(in srgb, var(--gold) 18%, var(--surface));
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--maroon-deep);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+
+/* ---------- Status & alerts ---------- */
+
+.status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  min-height: 1.25rem;
+}
+
+.status-line strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.status-msg {
+  color: var(--maroon-deep);
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid;
+  font-size: 0.9rem;
+}
+
+.alert ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.alert-error {
+  background: var(--error-bg);
+  border-color: var(--error-line);
+  color: var(--error-ink);
+}
+
+.alert-warn {
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+  color: var(--warn-ink);
+}
+
+.alert-dismiss {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.alert-dismiss:hover {
+  opacity: 1;
+}
+
+/* ---------- Workspace ---------- */
+
+/*
+  Three columns: editor, preview, controls.
+
+  The preview gets its own column rather than sitting under the controls, which
+  pushed it below the fold — the whole point of a live preview is seeing it and
+  the sliders at the same time. All tracks use minmax(0, …) so their intrinsic
+  content width can't force the page to scroll sideways.
+*/
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 17rem) minmax(0, 19rem);
+  gap: 0.85rem;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+.preview-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The preview fills its column so the image gets real space. */
+.preview-column .preview-panel {
+  flex: 1;
+  min-height: 0;
+  align-content: start;
+}
+
+.preview-column .preview-stage {
+  flex: 1;
+  max-height: none;
+}
+
+.preview-column .preview-stage img {
+  max-height: 100%;
+}
+
+.editor-pane {
+  min-height: 0;
+  min-width: 0;
+  /* Containing block for the hidden (absolutely-positioned) pane. */
+  position: relative;
+}
+
+.editor-shell {
+  height: 100%;
+  min-height: 28rem;
+  /* Ketcher's toolbars have a wide intrinsic minimum; without this the grid
+     track refuses to shrink and the whole page scrolls sideways. */
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  /* Always light: the canvas is the document, not chrome. */
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.editor-shell > div,
+.editor-shell .Ketcher-root {
+  height: 100% !important;
+  min-height: 100%;
+}
+
+/* ---------- 2D / 3D pane switching ---------- */
+
+/* Both panes stay mounted (Ketcher's WASM editor can't be remounted, and the
+   WebGL context is expensive to rebuild), so the inactive one is hidden without
+   being unmounted. `display: none` would collapse Ketcher's measured size and
+   break its layout on return, hence the visually-hidden approach. */
+.pane-live {
+  height: 100%;
+  min-height: 0;
+}
+
+.pane-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.viewer3d-shell {
+  height: 100%;
+  min-height: 28rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  /* A checkerboard reads as "transparent" the way image editors do, so the
+     exported PNG's alpha isn't a surprise. */
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(45deg, color-mix(in srgb, var(--muted) 12%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--muted) 12%, transparent) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--muted) 12%, transparent) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--muted) 12%, transparent) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+/* White-background mode: hide the checkerboard so what you see matches the
+   composited export. */
+.viewer3d-white {
+  background-image: none;
+  background-color: #fff;
+}
+
+.viewer3d-empty {
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+  background-image: none;
+}
+
+.viewer3d-empty p {
+  margin: 0;
+  max-width: 26rem;
+}
+
+/* 3Dmol measures this container to size its canvas, so it needs a real size and
+   a positioning context. Kept in CSS (not inline) so the export path can
+   temporarily enlarge it for supersampled capture. */
+.viewer3d-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 3Dmol injects an absolutely-positioned canvas; keep it inside the rounded
+   shell rather than overflowing it. */
+.viewer3d-host canvas {
+  border-radius: 13px;
+}
+
+/* During supersampled export the host is inflated beyond its parent; clip it so
+   the page doesn't reflow or flash a giant canvas. */
+.viewer3d-shell {
+  contain: paint;
+}
+
+.header-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.view-seg {
+  flex: 0 0 auto;
+}
+
+.select-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.select-row select {
+  flex: 0 1 11rem;
+  height: 2.1rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.select-row select:focus {
+  outline: none;
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--maroon) 15%, transparent);
+}
+
+.side-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.panel {
+  min-width: 0;
+}
+
+/* ---------- Panels ---------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 0.7rem;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--maroon-deep);
+}
+
+.panel-hint,
+.panel-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ---------- Presets & chips ---------- */
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip:not(:disabled):hover {
+  border-color: var(--maroon);
+}
+
+.chip-active {
+  background: var(--maroon);
+  border-color: var(--maroon);
+  color: #fff;
+}
+
+.chip-static {
+  cursor: default;
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Sliders ---------- */
+
+.slider-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.slider-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.slider-label output {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider-row input[type='range'] {
+  width: 100%;
+  accent-color: var(--maroon);
+}
+
+/* ---------- Toggles & segmented controls ---------- */
+
+.toggle-row {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+
+.toggle input {
+  accent-color: var(--maroon);
+}
+
+.seg {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.seg legend {
+  float: left;
+  width: 100%;
+  padding: 0 0 0.25rem 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.seg label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.seg label input {
+  /* Keep it focusable/announced, but hide the dot — the pill is the affordance. */
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.seg .seg-on {
+  background: var(--maroon);
+  color: #fff;
+  font-weight: 650;
+}
+
+.seg label:has(input:focus-visible) {
+  outline: 2px solid var(--maroon);
+  outline-offset: 1px;
+}
+
+.seg:disabled label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.theme-seg {
+  flex: 0 0 auto;
+}
+
+/* Render action, pinned to the bottom of the depiction panel. */
+.render-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+}
+
+.render-row .btn-accent {
+  flex: 1;
+}
+
+.format-seg {
+  flex: 0 0 auto;
+}
+
+.format-seg legend {
+  float: none;
+  padding: 0 0 0.2rem 0.15rem;
+}
+
+.theme-seg legend {
+  float: none;
+  padding: 0;
+}
+
+/* ---------- Batch ---------- */
+
+.batch-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 5.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.batch-input:focus {
+  outline: none;
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--maroon) 15%, transparent);
+}
+
+.batch-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.batch-progress {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.progress-track {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--maroon) 12%, var(--surface-2));
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--maroon);
+  transition: width 160ms ease;
+}
+
+.progress-text {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.batch-failures {
+  font-size: 0.78rem;
+  color: var(--warn-ink);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+}
+
+.batch-failures summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.batch-failures ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+/* ---------- History ---------- */
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.history-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.history-item:not(:disabled):hover {
+  border-color: var(--maroon);
+  background: color-mix(in srgb, var(--gold) 16%, var(--surface));
+}
+
+.history-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-time {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Preview panel ---------- */
+
+.preview-flags {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.preview-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.preview-live {
+  background: var(--maroon);
+  border-color: var(--maroon);
+  color: #fff;
+}
+
+.preview-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 9rem;
+  max-height: 20rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  overflow: auto;
+  transition: opacity 120ms ease;
+}
+
+.preview-stage img {
+  max-width: 100%;
+  max-height: 18rem;
+  object-fit: contain;
+}
+
+/* Dim rather than blank during a live re-render, so the image doesn't flicker
+   out of existence on every slider tick. */
+.preview-rendering {
+  opacity: 0.55;
+}
+
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.preview-actions .btn-accent {
+  flex: 1;
+}
+
+/* Checkerboard so a transparent export reads as transparent, not white. */
+.preview-checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #d8d8d8 25%, transparent 25%),
+    linear-gradient(-45deg, #d8d8d8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d8d8d8 75%),
+    linear-gradient(-45deg, transparent 75%, #d8d8d8 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+}
+
+.preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  margin: 0;
+}
+
+.preview-meta div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.preview-meta dt {
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.preview-meta dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-warn {
+  font-size: 0.82rem;
+}
+
+.preview-filename {
+  margin: 0;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ---------- Footer ---------- */
+
+.app-footer {
+  padding: 0.55rem 1.25rem 0.85rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.app-footer p {
+  margin: 0;
+  max-width: 70rem;
+}
+
+/* ---------- Responsive ---------- */
+
+/* Below three-column width, drop the preview under the editor and let the
+   controls keep their own column. */
+@media (max-width: 1400px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 19rem);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .preview-column {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .side-panels {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .preview-column .preview-stage {
+    max-height: 15rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(24rem, 1fr) auto auto;
+  }
+
+  .preview-column {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .side-panels {
+    grid-row: 3;
+    grid-column: 1;
+    overflow-y: visible;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 980px) {
+  .toolbar-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .suggest-list {
+    right: 0;
+  }
+
+  .export-group {
+    width: 100%;
+  }
+
+  .export-group .btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 0.85rem 0.85rem 0.7rem;
+  }
+
+  .workspace {
+    padding: 0.55rem 0.65rem 0.35rem;
+  }
+
+  .editor-shell {
+    min-height: 22rem;
+    border-radius: 10px;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+
+  .input-row .btn,
+  .export-group .btn {
+    width: 100%;
+  }
+}
