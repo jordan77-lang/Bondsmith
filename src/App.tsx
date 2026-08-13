@@ -5,7 +5,16 @@ import { Toolbar } from './components/Toolbar'
 import { StylePanel } from './components/StylePanel'
 import { Style3DPanel } from './components/Style3DPanel'
 import { Viewer3D, type Viewer3DHandle } from './components/Viewer3D'
+import { CrystalViewer, type CrystalViewerHandle } from './components/CrystalViewer'
+import { CrystalPanel } from './components/CrystalPanel'
 import { PreviewPanel, type PreviewData } from './components/PreviewPanel'
+import {
+  CRYSTAL_PRESETS,
+  DEFAULT_CRYSTAL_STYLE,
+  STRUCTURE_LIBRARY,
+  type CrystalPresetKey,
+  type CrystalStyle,
+} from './lib/crystal'
 import { downloadBlob } from './lib/download'
 import { fetchStructureByName, slugifyName } from './lib/pubchem'
 import { fetch3DStructure } from './lib/pubchem3d'
@@ -38,6 +47,14 @@ function matchPreset3D(style: Style3D): Preset3DKey | 'custom' {
   return found ?? 'custom'
 }
 
+function matchCrystalPreset(style: CrystalStyle): CrystalPresetKey | 'custom' {
+  const keys = Object.keys(CRYSTAL_PRESETS) as CrystalPresetKey[]
+  const found = keys.find(
+    (k) => JSON.stringify(CRYSTAL_PRESETS[k].style) === JSON.stringify(style),
+  )
+  return found ?? 'custom'
+}
+
 /** Convert a PNG data URI to a Blob for download. */
 function dataUriToBlob(uri: string): Blob {
   const [header, data] = uri.split(',')
@@ -62,11 +79,25 @@ export default function App() {
   const [, setTheme, themePref] = useTheme()
 
   // --- 3D view (kept entirely separate from the 2D SVG pipeline) ---
-  const [view, setView] = useState<'2d' | '3d'>('2d')
+  const [view, setView] = useState<'2d' | '3d' | 'crystal'>('2d')
   const [sdf3d, setSdf3d] = useState<string | null>(null)
   const [label3d, setLabel3d] = useState<string | null>(null)
   const [style3d, setStyle3d] = usePersistentState<Style3D>('style3d', DEFAULT_STYLE_3D)
   const viewer3dRef = useRef<Viewer3DHandle | null>(null)
+
+  // --- crystal view ---
+  const [cif, setCif] = useState<string | null>(null)
+  const [cifFile, setCifFile] = useState<string | null>(null)
+  const [cifLabel, setCifLabel] = useState<string | null>(null)
+  const [crystalStats, setCrystalStats] = useState<{
+    cellAtoms: number
+    totalAtoms: number
+  } | null>(null)
+  const [crystalStyle, setCrystalStyle] = usePersistentState<CrystalStyle>(
+    'crystal',
+    DEFAULT_CRYSTAL_STYLE,
+  )
+  const crystalRef = useRef<CrystalViewerHandle | null>(null)
 
   // Pending export awaiting confirmation in the preview panel. The blob is held
   // alongside the object URL so Download doesn't have to re-render.
@@ -335,8 +366,73 @@ export default function App() {
     })
   }, [sdf3d, label3d, style3d.background, style3d.exportScale, withBusy, stagePreview])
 
+  /** Load a bundled CIF from public/structures. */
+  const handlePickStructure = useCallback(
+    (file: string) => {
+      const entry = STRUCTURE_LIBRARY.find((s) => s.file === file)
+      void withBusy(`Loading ${entry?.label ?? file}…`, async () => {
+        // BASE_URL keeps this correct under the GitHub Pages subpath.
+        const res = await fetch(`${import.meta.env.BASE_URL}structures/${file}`)
+        if (!res.ok) throw new Error(`Could not load ${file} (${res.status}).`)
+        const text = await res.text()
+        setCif(text)
+        setCifFile(file)
+        setCifLabel(entry?.label ?? file.replace(/\.cif$/, ''))
+        setView('crystal')
+        setMessage(
+          entry
+            ? `${entry.label} — ${entry.formula}, ${entry.spaceGroup}. ${entry.note}`
+            : `Loaded ${file}.`,
+        )
+      })
+    },
+    [withBusy],
+  )
+
+  const handleUploadCif = useCallback(
+    (text: string, name: string) => {
+      if (!text.includes('_atom_site') && !text.includes('_cell_length')) {
+        setError(`${name} doesn't look like a CIF — no cell or atom-site data found.`)
+        return
+      }
+      setCif(text)
+      setCifFile(`upload:${name}`)
+      setCifLabel(name.replace(/\.cif$/i, ''))
+      setView('crystal')
+      setError(null)
+      setMessage(`Loaded ${name}.`)
+    },
+    [],
+  )
+
+  const handleRenderCrystal = useCallback(() => {
+    const handle = crystalRef.current
+    if (!handle) return
+    void withBusy('Rendering lattice…', async () => {
+      if (!cif) throw new Error('Choose a structure first.')
+      const raw = await handle.pngUri(crystalStyle.exportScale)
+      if (!raw || raw === 'data:,') {
+        throw new Error('The viewer produced an empty image.')
+      }
+      const cropped = await cropPngDataUri(raw, {
+        padding: 24 * Math.max(1, crystalStyle.exportScale),
+        background: crystalStyle.background,
+      })
+      const { na, nb, nc } = crystalStyle
+      await stagePreview(
+        dataUriToBlob(cropped),
+        `${slugifyName(cifLabel ?? 'crystal')}-${na}x${nb}x${nc}.png`,
+        'png',
+        crystalStyle.background === 'transparent',
+        ['Lattice export is raster. For vector figures, use the 2D editor.'],
+      )
+      setMessage(null)
+    })
+  }, [cif, cifLabel, crystalStyle, withBusy, stagePreview])
+
   const preset = matchPreset(style)
   const preset3d = matchPreset3D(style3d)
+  const crystalPreset = matchCrystalPreset(crystalStyle)
 
   return (
     <div className="app">
@@ -370,12 +466,39 @@ export default function App() {
           <div className={view === '2d' ? 'pane-live' : 'pane-hidden'}>
             <MoleculeEditor onReady={setKetcher} />
           </div>
+          <div className={view === 'crystal' ? 'pane-live' : 'pane-hidden'}>
+            {cif ? (
+              <div
+                className="viewer3d-shell"
+              >
+                <CrystalViewer
+                  cif={cif}
+                  style={crystalStyle}
+                  onReady={(h) => {
+                    crystalRef.current = h
+                  }}
+                  onStats={setCrystalStats}
+                  onError={setError}
+                />
+              </div>
+            ) : (
+              <div className="viewer3d-shell viewer3d-empty">
+                <p>
+                  Pick a structure in <strong>Crystal &amp; export</strong>, or
+                  upload your own CIF.
+                </p>
+                <p className="panel-note">
+                  Set the lattice size in unit cells, then render. Structures come
+                  from the Crystallography Open Database.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className={view === '3d' ? 'pane-live' : 'pane-hidden'}>
             {sdf3d ? (
               <div
-                className={`viewer3d-shell${
-                  style3d.background === 'white' ? ' viewer3d-white' : ''
-                }`}
+                className="viewer3d-shell"
               >
                 <Viewer3D
                   sdf={sdf3d}
@@ -413,7 +536,23 @@ export default function App() {
         </div>
 
         <aside className="side-panels">
-          {view === '2d' ? (
+          {view === 'crystal' ? (
+            <CrystalPanel
+              style={crystalStyle}
+              preset={crystalPreset}
+              disabled={!cif || busy}
+              currentFile={cifFile}
+              stats={crystalStats}
+              onPreset={(key) => setCrystalStyle(CRYSTAL_PRESETS[key].style)}
+              onChange={(patch) =>
+                setCrystalStyle((prev) => ({ ...prev, ...patch }))
+              }
+              onPickStructure={handlePickStructure}
+              onUploadCif={handleUploadCif}
+              onRecenter={() => crystalRef.current?.recenter()}
+              onRender={handleRenderCrystal}
+            />
+          ) : view === '2d' ? (
             <StylePanel
               style={style}
               preset={preset}

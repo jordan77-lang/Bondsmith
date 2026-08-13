@@ -1,10 +1,17 @@
-# Mol Forge
+# Bondsmith
 
-**Live: https://jordan77-lang.github.io/Molforge/**
+**Live: https://jordan77-lang.github.io/Bondsmith/**
 
-Forge chemistry figures for curriculum work: search PubChem or draw a structure
-with [Ketcher](https://github.com/epam/ketcher), tune how it's drawn, preview the
-result, and export **Illustrator-ready SVG**, PNG, or a 3D render.
+Build chemistry figures for curriculum work: draw or search a molecule, or build
+a crystal lattice, then tune how it's drawn, preview the result, and export
+**Illustrator-ready SVG** or high-resolution PNG.
+
+Three modes:
+
+- **2D editor** — [Ketcher](https://github.com/epam/ketcher) + Indigo, exporting
+  cropped transparent vectors
+- **3D molecule** — PubChem conformers in ball-and-stick, spacefill and more
+- **Crystal** — CIF lattices at any size, from Prussian blue to quartz
 
 Built for ASU / Dreamscape Learn course materials.
 
@@ -17,8 +24,10 @@ Built for ASU / Dreamscape Learn course materials.
   depiction sliders, so you see the actual export while you tune it
 - **Depiction presets** (print, slide, color figure, compact) plus manual control
   over bond weight, label size, scale, and CPK coloring
-- **3D viewer** — ball-and-stick, stick, spacefill, wireframe; rotatable, with
+- **3D molecule** — ball-and-stick, stick, spacefill, wireframe; rotatable, with
   supersampled PNG export up to 6×
+- **Crystal lattices** — CIF structures replicated to any size in unit cells,
+  with unit-cell outlines and the same high-resolution export
 - **Light / dark / auto** theming
 - **Copy SMILES** for reuse in other tools
 
@@ -52,10 +61,10 @@ background, or label size *after* the file is already placed in Illustrator.
 - **Label size is in px**, the same unit as bond length, so the two stay in
   proportion. Textbook depictions sit near 0.32 × bond length.
 
-## 3D view
+## 3D molecule view
 
-Switch to **3D viewer** in the header, or type a compound and hit **View 3D**.
-Drag to rotate, scroll to zoom, then **Render 3D preview**.
+Switch to **3D molecule** in the header, or type a compound and hit **View 3D**.
+Drag to rotate, scroll to zoom, then **Render preview**.
 
 - **3D output is raster, not vector.** A WebGL scene has no vector
   representation, so there's no SVG export here. For print figures the 2D path is
@@ -72,6 +81,55 @@ Drag to rotate, scroll to zoom, then **Render 3D preview**.
   single meaningful geometry; the app says so explicitly rather than showing a
   broken view.
 - Export captures the **current camera angle**, so rotate first.
+
+## Crystal lattices
+
+Switch to **Crystal**, pick a structure (or upload any CIF), set the lattice size
+in unit cells, and render. Drag to rotate, scroll to zoom.
+
+The bundled library covers Prussian blue, halite, periclase, fluorite, diamond,
+graphite, quartz, calcite, pyrite, rutile and copper — all from the
+[Crystallography Open Database](https://www.crystallography.net/cod/) (public
+domain). **Every entry's formula and space group was checked against the file**:
+several plausible-looking COD ids turned out to be entirely different compounds,
+so verify the CIF contents before adding more.
+
+- **Lattice size** is per axis (a/b/c), 1–12 cells. The panel reports atoms per
+  cell and the running total, and warns past ~20,000 atoms where rendering slows.
+- **Export** is supersampled up to 6× and cropped to the lattice, transparent by
+  default — the same path as the 3D view.
+- **Hide lattice water** drops the disordered solvent so a framework reads
+  clearly. It only applies to oxygen in cyanide frameworks like Prussian blue;
+  in quartz or the carbonates oxygen *is* the structure, so it's left alone.
+- **Presets**: Framework, Close packing (true ionic radii), Net only, Single cell.
+
+### Two CIF gotchas worth knowing
+
+Both cost real debugging time and are easy to reintroduce:
+
+- **3Dmol only reads the deprecated symmetry tag.** The CIF dictionary has two
+  spellings — `_symmetry_equiv_pos_as_xyz` (old) and
+  `_space_group_symop_operation_xyz` (current). 3Dmol looks only for the first,
+  so a modern CIF parses with zero symmetry operations and the cell silently
+  collapses to the asymmetric unit: diamond renders as **one carbon atom**
+  instead of a lattice. `normalizeCifSymmetryTags` aliases the tag before
+  parsing, which takes diamond from 1 atom to 192.
+- **Element symbols keep their oxidation state.** The parser reports `"N-"`,
+  `"Fe+3"` and so on from `_atom_site_type_symbol`, and those never match 3Dmol's
+  colour and radius tables — so nitrogen draws grey instead of blue.
+  `normalizeElement` strips the suffix.
+
+### What this is not
+
+For teaching figures of a lattice, this does the job. For publication
+crystallography it doesn't replace [VESTA](https://jp-minerals.org/vesta/en/) or
+CrystalMaker:
+
+- No coordination polyhedra, Miller planes, cleaving, or thermal ellipsoids.
+- **Fractional occupancy is dropped** by the parser. For Prussian blue that
+  matters — the 0.267/0.911 occupancies *are* the vacancy disorder that makes it
+  Fe₄[Fe(CN)₆]₃ — so the render shows a fully-occupied idealisation.
+- Output is raster, not vector.
 
 ## Requirements
 
@@ -156,10 +214,13 @@ src/
     Viewer3D.tsx           3Dmol wrapper (WebGL, imperative, supersampling)
     StylePanel.tsx         2D depiction presets + sliders
     Style3DPanel.tsx       3D presets, atom/bond size, projection, quality
+    CrystalViewer.tsx      CIF lattice viewer (unit cell, supercell)
+    CrystalPanel.tsx       structure picker, lattice size, crystal styles
     PreviewPanel.tsx       live preview + download
   lib/
     render.ts              RenderStyle → Indigo option names
     render3d.ts            Style3D → 3Dmol spec, PNG cropping
+    crystal.ts             lattice presets, CIF tag + element normalization
     svg.ts                 viewBox tightening, font pinning
     export.ts              export orchestration
     pubchem.ts             PUG REST 2D + CID resolution

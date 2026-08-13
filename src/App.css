@@ -284,7 +284,7 @@
 */
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 17rem) minmax(0, 19rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 15rem) minmax(0, 22.5rem);
   gap: 0.85rem;
   min-height: 0;
   min-width: 0;
@@ -363,30 +363,24 @@
   opacity: 0;
 }
 
+/*
+  The viewer's editing surface.
+  White, not a transparency checkerboard: 3Dmol's canvas paints its own opaque
+  ground that can't reliably be disabled from outside the library, so a
+  checkerboard here would be hidden anyway. Exports ARE transparent — verified
+  via the PNG alpha channel — and the Preview panel shows that on a checkerboard.
+  A white artboard is also the right mental model for figure work.
+*/
 .viewer3d-shell {
   height: 100%;
   min-height: 28rem;
+  /* Contains the host element while it's inflated for supersampled export. */
+  contain: paint;
   border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: var(--shadow);
-  /* A checkerboard reads as "transparent" the way image editors do, so the
-     exported PNG's alpha isn't a surprise. */
-  background-color: var(--surface);
-  background-image:
-    linear-gradient(45deg, color-mix(in srgb, var(--muted) 12%, transparent) 25%, transparent 25%),
-    linear-gradient(-45deg, color-mix(in srgb, var(--muted) 12%, transparent) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--muted) 12%, transparent) 75%),
-    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--muted) 12%, transparent) 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-}
-
-/* White-background mode: hide the checkerboard so what you see matches the
-   composited export. */
-.viewer3d-white {
-  background-image: none;
-  background-color: #fff;
+  background: #fff;
 }
 
 .viewer3d-empty {
@@ -419,12 +413,15 @@
   border-radius: 13px;
 }
 
-/* During supersampled export the host is inflated beyond its parent; clip it so
-   the page doesn't reflow or flash a giant canvas. */
-.viewer3d-shell {
-  contain: paint;
-}
-
+/*
+  The viewer canvas paints its own opaque white ground that we can't reliably
+  turn off from outside the library, so the on-screen shell is white to match
+  rather than showing a checkerboard the canvas covers anyway. This is a
+  deliberate divergence: the exported PNG *is* transparent (verified via its
+  alpha channel), and the Preview panel shows that transparency on a
+  checkerboard. The editing surface reads as a white artboard, which is the
+  right mental model for figure work.
+*/
 .header-controls {
   display: flex;
   align-items: flex-start;
@@ -472,6 +469,22 @@
 
 .panel {
   min-width: 0;
+}
+
+/* Panels must never scroll sideways: their children (selects, number rows,
+   chip rows) have intrinsic widths that would otherwise push the column open. */
+.side-panels .panel,
+.side-panels .panel * {
+  max-width: 100%;
+}
+
+.side-panels {
+  overflow-x: hidden;
+}
+
+.select-row select,
+.lattice-row input {
+  max-width: 100%;
 }
 
 /* ---------- Panels ---------- */
@@ -564,9 +577,17 @@
 .slider-label {
   display: flex;
   justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
   font-size: 0.78rem;
   color: var(--muted);
   font-weight: 600;
+}
+
+/* Readout must not be squeezed into an ellipsis by a long label. */
+.slider-label output {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .slider-label output {
@@ -658,13 +679,114 @@
   flex: 0 0 auto;
 }
 
-/* Render action, pinned to the bottom of the depiction panel. */
-.render-row {
+/* ---------- Crystal controls ---------- */
+
+.toolbar-crystal {
+  display: block;
+}
+
+.crystal-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: 70rem;
+}
+
+.crystal-hint strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.upload-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding-top: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.upload-row .panel-hint {
+  flex: 1;
+  min-width: 0;
+}
+
+.lattice-fields {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem 0.6rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.lattice-fields legend {
+  padding: 0 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lattice-row {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.lattice-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.lattice-row input {
+  flex: 1;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.lattice-row input:focus {
+  outline: none;
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--maroon) 15%, transparent);
+}
+
+.lattice-fields .panel-note {
+  margin-top: 0.45rem;
+}
+
+.note-warn {
+  color: var(--warn-ink);
+}
+
+.mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Render action, pinned to the bottom of the depiction panel.
+   Sticky so it stays reachable in the long crystal panel without scrolling. */
+.render-row {
+  position: sticky;
+  bottom: -0.85rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0 0.35rem;
+  margin-bottom: -0.35rem;
   border-top: 1px solid var(--line);
+  background: var(--surface);
 }
 
 .render-row .btn-accent {

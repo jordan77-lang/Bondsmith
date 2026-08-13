@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-const PREFIX = 'mol-forge:'
+const PREFIX = 'bondsmith:'
 
 /**
  * localStorage-backed state.

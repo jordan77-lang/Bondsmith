@@ -10,9 +10,9 @@ type ToolbarProps = {
   moleculeLabel: string
   /** The persisted preference, which is what the control reflects (Auto stays Auto). */
   themePref: 'light' | 'dark' | 'system'
-  view: '2d' | '3d'
+  view: '2d' | '3d' | 'crystal'
   onTheme: (t: 'light' | 'dark' | 'system') => void
-  onView: (v: '2d' | '3d') => void
+  onView: (v: '2d' | '3d' | 'crystal') => void
   onSearch: (query: string) => void
   onLoad3D: (query: string) => void
   onLoadSmiles: (smiles: string) => void
@@ -115,13 +115,13 @@ export function Toolbar({
     <header className="app-header">
       <div className="header-top">
         <div className="brand-block">
-          <h1 className="brand-title">Mol Forge</h1>
+          <h1 className="brand-title">Bondsmith</h1>
         </div>
 
         <div className="header-controls">
           <fieldset className="seg view-seg">
             <legend className="sr-only">View</legend>
-            {(['2d', '3d'] as const).map((v) => (
+            {([['2d','2D editor'],['3d','3D molecule'],['crystal','Crystal']] as const).map(([v,label]) => (
               <label key={v} className={view === v ? 'seg-on' : undefined}>
                 <input
                   type="radio"
@@ -129,7 +129,7 @@ export function Toolbar({
                   checked={view === v}
                   onChange={() => onView(v)}
                 />
-                {v === '2d' ? '2D editor' : '3D viewer'}
+                {label}
               </label>
             ))}
           </fieldset>
@@ -151,7 +151,16 @@ export function Toolbar({
         </div>
       </div>
 
-      <div className="toolbar-controls">
+      {/* Crystal mode loads structures from its own panel, so the molecule
+          search and SMILES inputs are hidden there rather than sitting inert. */}
+      <div className={`toolbar-controls${view === 'crystal' ? ' toolbar-crystal' : ''}`}>
+        {view === 'crystal' ? (
+          <p className="crystal-hint">
+            Choose a structure or upload a CIF in <strong>Crystal &amp; export</strong>,
+            set the lattice size, then render. Drag to rotate, scroll to zoom.
+          </p>
+        ) : (
+        <>
         <div className="field search-field">
           <label htmlFor={searchId}>Search PubChem</label>
           <div className="input-row">
@@ -268,11 +277,15 @@ export function Toolbar({
             </button>
           </div>
         )}
+        </>
+        )}
       </div>
 
       <div className="status-line" aria-live="polite">
         {!ready && <span className="status-loading">Starting editor…</span>}
-        {ready && moleculeLabel && (
+        {/* The molecule label is meaningless in crystal mode, where the loaded
+            structure is named in the message instead. */}
+        {ready && view !== 'crystal' && moleculeLabel && (
           <span>
             Current: <strong>{moleculeLabel}</strong>
           </span>
