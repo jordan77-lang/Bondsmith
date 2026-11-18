@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Ketcher } from 'ketcher-core'
+import { ChemicalMimeType, type Ketcher } from 'ketcher-core'
 import { MoleculeEditor } from './components/MoleculeEditor'
+import { LewisPanel } from './components/LewisPanel'
 import { Toolbar } from './components/Toolbar'
 import { StylePanel } from './components/StylePanel'
 import { Style3DPanel } from './components/Style3DPanel'
@@ -27,6 +28,14 @@ import {
   type Style3D,
 } from './lib/render3d'
 import { exportStructure } from './lib/export'
+import {
+  buildLewis,
+  DEFAULT_LEWIS_STYLE,
+  lewisSvgToPng,
+  type LewisAtomReport,
+  type LewisStyle,
+} from './lib/lewis'
+import { hasAromaticBonds, parseMolfile, type ParsedMol } from './lib/molfile'
 import { usePersistentState, useTheme } from './lib/storage'
 import './App.css'
 
@@ -79,7 +88,7 @@ export default function App() {
   const [, setTheme, themePref] = useTheme()
 
   // --- 3D view (kept entirely separate from the 2D SVG pipeline) ---
-  const [view, setView] = useState<'2d' | '3d' | 'crystal'>('2d')
+  const [view, setView] = useState<'2d' | 'lewis' | '3d' | 'crystal'>('2d')
   const [sdf3d, setSdf3d] = useState<string | null>(null)
   const [label3d, setLabel3d] = useState<string | null>(null)
   const [style3d, setStyle3d] = usePersistentState<Style3D>('style3d', DEFAULT_STYLE_3D)
@@ -98,6 +107,16 @@ export default function App() {
     DEFAULT_CRYSTAL_STYLE,
   )
   const crystalRef = useRef<CrystalViewerHandle | null>(null)
+
+  // --- Lewis view (draws from the same Ketcher canvas as 2D) ---
+  const [lewisStyle, setLewisStyle] = usePersistentState<LewisStyle>(
+    'lewis',
+    DEFAULT_LEWIS_STYLE,
+  )
+  const [lewisReport, setLewisReport] = useState<LewisAtomReport[] | null>(null)
+  // Same role as liveFormat, kept separate so a 2D live preview doesn't start
+  // re-rendering Lewis output (or vice versa) after a view switch.
+  const [liveLewis, setLiveLewis] = useState<'svg' | 'png' | null>(null)
 
   // Pending export awaiting confirmation in the preview panel. The blob is held
   // alongside the object URL so Download doesn't have to re-render.
@@ -209,6 +228,7 @@ export default function App() {
     })
     pendingBlobRef.current = null
     setLiveFormat(null)
+    setLiveLewis(null)
     setMessage(null)
   }, [])
 
@@ -307,6 +327,110 @@ export default function App() {
       clearTimeout(timer)
     }
   }, [liveFormat, ketcher, view, style, render2D])
+
+  /**
+   * Read the canvas as a molfile for the Lewis renderer.
+   *
+   * Lewis structures need explicit single/double bonds, so aromatic rings (from
+   * aromatic SMILES like c1ccccc1) are kekulized through Indigo first.
+   */
+  const loadLewisMol = useCallback(async (): Promise<ParsedMol> => {
+    if (!ketcher) throw new Error('The editor is still starting.')
+    const molfile = await ketcher.getMolfile('v2000')
+    const mol = parseMolfile(molfile)
+    if (!hasAromaticBonds(mol)) return mol
+    const kekule = await ketcher.indigo.dearomatize(molfile)
+    const { struct } = await ketcher.indigo.convert(kekule, {
+      outputFormat: ChemicalMimeType.Mol,
+    })
+    const converted = parseMolfile(struct)
+    if (hasAromaticBonds(converted)) {
+      throw new Error(
+        'Could not convert the aromatic ring to single/double bonds. Draw it with alternating bonds instead.',
+      )
+    }
+    return converted
+  }, [ketcher])
+
+  const buildLewisBlob = useCallback(
+    async (s: LewisStyle, format: 'svg' | 'png') => {
+      const mol = await loadLewisMol()
+      const result = buildLewis(mol, s, moleculeLabel)
+      const blob =
+        format === 'svg'
+          ? new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' })
+          : await lewisSvgToPng(result.svg, result.width, result.height, s.pngScale)
+      return { blob, result }
+    },
+    [loadLewisMol, moleculeLabel],
+  )
+
+  const renderLewis = useCallback(
+    async (format: 'svg' | 'png') => {
+      const { blob, result } = await buildLewisBlob(lewisStyle, format)
+      setLewisReport(result.atoms)
+      const notes = [...result.warnings]
+      if (format === 'svg') {
+        notes.push(
+          'Labels are live text in a pinned Arial/Helvetica stack; dots are vector circles on their own layer.',
+        )
+      }
+      await stagePreview(
+        blob,
+        `${slugifyName(moleculeLabel)}-lewis.${format}`,
+        format,
+        lewisStyle.background === 'transparent',
+        notes,
+      )
+    },
+    [buildLewisBlob, lewisStyle, moleculeLabel, stagePreview],
+  )
+
+  const handleRenderLewis = useCallback(() => {
+    if (!ketcher) return
+    setLiveLewis(renderFormat)
+    void withBusy('Drawing Lewis structure…', async () => {
+      await renderLewis(renderFormat)
+      setMessage(null)
+    })
+  }, [ketcher, renderFormat, renderLewis, withBusy])
+
+  /** Student copy (charges hidden) plus answer key (charges shown). */
+  const handleLewisWorksheet = useCallback(() => {
+    if (!ketcher) return
+    void withBusy('Rendering student and key versions…', async () => {
+      const slug = slugifyName(moleculeLabel)
+      const student = await buildLewisBlob({ ...lewisStyle, showCharges: false }, renderFormat)
+      const key = await buildLewisBlob({ ...lewisStyle, showCharges: true }, renderFormat)
+      setLewisReport(key.result.atoms)
+      downloadBlob(student.blob, `${slug}-lewis-student.${renderFormat}`)
+      // A beat between downloads: some browsers drop a second download that
+      // starts in the same tick.
+      await new Promise((r) => setTimeout(r, 300))
+      downloadBlob(key.blob, `${slug}-lewis-key.${renderFormat}`)
+      setMessage(`Downloaded ${slug}-lewis-student and ${slug}-lewis-key.`)
+    })
+  }, [ketcher, moleculeLabel, lewisStyle, renderFormat, buildLewisBlob, withBusy])
+
+  // Live Lewis preview: same debounce and rules as the 2D one above.
+  useEffect(() => {
+    if (!liveLewis || !ketcher || view !== 'lewis') return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      setPreviewBusy(true)
+      void renderLewis(liveLewis)
+        .catch(() => {
+          // Transient failures stay quiet during live editing; the button reports.
+        })
+        .finally(() => {
+          if (!cancelled) setPreviewBusy(false)
+        })
+    }, 180)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [liveLewis, ketcher, view, renderLewis])
 
   const handleCopySmiles = useCallback(() => {
     if (!ketcher) return
@@ -463,7 +587,7 @@ export default function App() {
             is off), and rebuilding the WebGL context on every toggle would be
             wasteful, so neither one is conditionally rendered.
           */}
-          <div className={view === '2d' ? 'pane-live' : 'pane-hidden'}>
+          <div className={view === '2d' || view === 'lewis' ? 'pane-live' : 'pane-hidden'}>
             <MoleculeEditor onReady={setKetcher} />
           </div>
           <div className={view === 'crystal' ? 'pane-live' : 'pane-hidden'}>
@@ -529,7 +653,10 @@ export default function App() {
             preview={preview}
             busy={busy}
             rendering={previewBusy}
-            live={view === '2d' && liveFormat !== null}
+            live={
+              (view === '2d' && liveFormat !== null) ||
+              (view === 'lewis' && liveLewis !== null)
+            }
             onConfirm={confirmDownload}
             onDiscard={cancelPreview}
           />
@@ -551,6 +678,18 @@ export default function App() {
               onUploadCif={handleUploadCif}
               onRecenter={() => crystalRef.current?.recenter()}
               onRender={handleRenderCrystal}
+            />
+          ) : view === 'lewis' ? (
+            <LewisPanel
+              style={lewisStyle}
+              disabled={!ketcher || busy}
+              format={renderFormat}
+              live={liveLewis !== null}
+              report={lewisReport}
+              onChange={(patch) => setLewisStyle((prev) => ({ ...prev, ...patch }))}
+              onFormat={setRenderFormat}
+              onRender={handleRenderLewis}
+              onWorksheet={handleLewisWorksheet}
             />
           ) : view === '2d' ? (
             <StylePanel

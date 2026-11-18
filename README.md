@@ -6,10 +6,12 @@ Build chemistry figures for curriculum work: draw or search a molecule, or build
 a crystal lattice, then tune how it's drawn, preview the result, and export
 **Illustrator-ready SVG** or high-resolution PNG.
 
-Three modes:
+Four modes:
 
 - **2D editor** — [Ketcher](https://github.com/epam/ketcher) + Indigo, exporting
   cropped transparent vectors
+- **Lewis** — the same canvas drawn as a Lewis structure, with lone pairs
+  computed from charges and bonds, and a student/answer-key export pair
 - **3D molecule** — PubChem conformers in ball-and-stick, spacefill and more
 - **Crystal** — CIF lattices at any size, from Prussian blue to quartz
 
@@ -60,6 +62,39 @@ background, or label size *after* the file is already placed in Illustrator.
   preset gives you identical weights across every figure in a set.
 - **Label size is in px**, the same unit as bond length, so the two stay in
   proportion. Textbook depictions sit near 0.32 × bond length.
+
+## Lewis structures
+
+Switch to **Lewis**. It draws whatever is on the Ketcher canvas, so search,
+paste SMILES or draw as usual, then **Render preview**.
+
+- **Dots are computed, never placed by hand.** For each main-group atom,
+  nonbonding electrons N = V − FC − B (valence electrons, formal charge, bonds
+  counted by order including H). That's the formal-charge formula run
+  backwards, so the student exercise "count dots and bonds, infer the charge"
+  is the exact inverse of what the renderer did.
+- **Student + key.** One click downloads two files with identical dot
+  positions: charges hidden (student) and shown (key). Charges are placed last,
+  outside the dots, precisely so hiding them can't shift anything.
+- **It draws the resonance form it's given.** PubChem records are mostly
+  formal-charge-minimised (sulfate with S=O, an expanded octet; nitro groups
+  and N-oxides charge-separated). Draw the form you want to teach and the dots
+  follow.
+- **Electron bookkeeping** in the panel lists V, B, N, FC and the electron
+  count for every atom, and flags incomplete octets (BF₃, carbocations),
+  expanded octets (SF₆), radicals (NO) and impossible counts (a 5-bonded C).
+- **Aromatic input is kekulized** through Indigo first, since a Lewis structure
+  needs explicit single/double bonds.
+- **Radicals** come from Ketcher's atom radical property. Without it, an odd
+  electron count still shows one unpaired dot.
+- **Transition metals get no dots** — there's no single valence-electron count
+  for d-block atoms — and the preview says so.
+- **Bonds as lines or electron dots** (H:H style). SVG output has named layers
+  (`bonds`, `atoms`, `lone-pairs`, `bonding-electrons`, `formal-charges`), so
+  electrons can be recoloured or hidden in Illustrator in one click.
+- Layout follows the editor's 2D geometry; lone pairs and implicit hydrogens go
+  into the most open angles, preferring the textbook top/bottom/left/right
+  positions.
 
 ## 3D molecule view
 
@@ -213,12 +248,15 @@ src/
     MoleculeEditor.tsx     Ketcher wrapper (2D)
     Viewer3D.tsx           3Dmol wrapper (WebGL, imperative, supersampling)
     StylePanel.tsx         2D depiction presets + sliders
+    LewisPanel.tsx         Lewis options, student/key export, electron table
     Style3DPanel.tsx       3D presets, atom/bond size, projection, quality
     CrystalViewer.tsx      CIF lattice viewer (unit cell, supercell)
     CrystalPanel.tsx       structure picker, lattice size, crystal styles
     PreviewPanel.tsx       live preview + download
   lib/
     render.ts              RenderStyle → Indigo option names
+    lewis.ts               electron counting + Lewis SVG renderer
+    molfile.ts             V2000/V3000 molfile reader for the Lewis path
     render3d.ts            Style3D → 3Dmol spec, PNG cropping
     crystal.ts             lattice presets, CIF tag + element normalization
     svg.ts                 viewBox tightening, font pinning
