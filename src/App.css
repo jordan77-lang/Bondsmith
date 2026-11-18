@@ -1139,3 +1139,59 @@
     width: 100%;
   }
 }
+
+/* ---------- Lewis panel ---------- */
+
+.lewis-worksheet {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.lewis-report {
+  border-top: 1px solid var(--line);
+  padding-top: 0.6rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lewis-report summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--maroon-deep);
+}
+
+.lewis-report table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lewis-report th,
+.lewis-report td {
+  padding: 0.2rem 0.3rem;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.lewis-report thead th {
+  color: var(--muted);
+  font-weight: 600;
+  cursor: help;
+}
+
+.lewis-report tbody th {
+  text-align: left;
+  font-weight: 650;
+}
+
+.lewis-notes {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  color: var(--warn-ink);
+  line-height: 1.4;
+}

@@ -10,9 +10,9 @@ type ToolbarProps = {
   moleculeLabel: string
   /** The persisted preference, which is what the control reflects (Auto stays Auto). */
   themePref: 'light' | 'dark' | 'system'
-  view: '2d' | '3d' | 'crystal'
+  view: '2d' | 'lewis' | '3d' | 'crystal'
   onTheme: (t: 'light' | 'dark' | 'system') => void
-  onView: (v: '2d' | '3d' | 'crystal') => void
+  onView: (v: '2d' | 'lewis' | '3d' | 'crystal') => void
   onSearch: (query: string) => void
   onLoad3D: (query: string) => void
   onLoadSmiles: (smiles: string) => void
@@ -121,7 +121,7 @@ export function Toolbar({
         <div className="header-controls">
           <fieldset className="seg view-seg">
             <legend className="sr-only">View</legend>
-            {([['2d','2D editor'],['3d','3D molecule'],['crystal','Crystal']] as const).map(([v,label]) => (
+            {([['2d','2D editor'],['lewis','Lewis'],['3d','3D molecule'],['crystal','Crystal']] as const).map(([v,label]) => (
               <label key={v} className={view === v ? 'seg-on' : undefined}>
                 <input
                   type="radio"
@@ -265,7 +265,7 @@ export function Toolbar({
           Rendering and downloading both live in the sidebar panels, next to the
           controls they act on. The header keeps only structure-level actions.
         */}
-        {view === '2d' && (
+        {(view === '2d' || view === 'lewis') && (
           <div className="export-group" role="group" aria-label="Structure actions">
             <button
               type="button"

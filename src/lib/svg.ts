@@ -8,7 +8,7 @@
  */
 
 /** Fonts Indigo may reference, mapped to a stack that degrades sanely. */
-const FONT_STACK =
+export const FONT_STACK =
   "'Arial', 'Helvetica Neue', Helvetica, 'Liberation Sans', sans-serif"
 
 export type SvgCleanupOptions = {
